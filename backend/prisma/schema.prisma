@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CLIENT
+  ADMIN
+  DELIVERY
+}
+
+model User {
+  id        Int    @id @default(autoincrement())
+  name      String
+  email     String @unique
+  password  String
+  role      Role   @default(CLIENT)
+
+  phone     String?
+  address   String?
+  photo     String?
+
+  restaurants Restaurant[]
+  orders      Order[]
+  deliveries  Delivery[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Restaurant {
+  id        Int    @id @default(autoincrement())
+  name      String
+  image     String?
+  address   String
+
+  ownerId   Int
+  owner     User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  products  Product[]
+  orders    Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id           Int    @id @default(autoincrement())
+  name         String
+  description  String?
+  price        Float
+  image        String?
+  available    Boolean @default(true)
+
+  restaurantId Int
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  orderItems   OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  PREPARING
+  DELIVERING
+  COMPLETED
+  CANCELLED
+}
+
+model Order {
+  id              Int @id @default(autoincrement())
+  status          OrderStatus @default(PENDING)
+  total           Float
+
+  deliveryAddress String
+
+  userId          Int
+  user            User @relation(fields: [userId], references: [id])
+
+  restaurantId    Int
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id])
+
+  items           OrderItem[]
+  delivery        Delivery?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model OrderItem {
+  id        Int @id @default(autoincrement())
+  quantity  Int
+  price     Float
+
+  orderId   Int
+  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+enum DeliveryStatus {
+  PENDING
+  PICKED_UP
+  DELIVERING
+  DELIVERED
+  CANCELLED
+}
+
+model Delivery {
+  id        Int @id @default(autoincrement())
+  status    DeliveryStatus @default(PENDING)
+
+  orderId   Int @unique
+  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  driverId  Int?
+  driver    User? @relation(fields: [driverId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
