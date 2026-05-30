@@ -20,15 +20,25 @@ interface SocketData {}
 
 app.prepare().then(() => {
     const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
+        res.setHeader("Access-Control-Allow-Origin", "http://localhost:3001")
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+        if (req.method === "OPTIONS") {
+            res.writeHead(200)
+            res.end()
+            return
+        }
+
         handler(req, res)
     })
 
     const io = new Server(httpServer, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
-})
+        cors: {
+            origin: "http://localhost:3001",
+            methods: ["GET", "POST"]
+        }
+    })
 
     io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
         console.log(`Cliente conectado: ${socket.id}`)
