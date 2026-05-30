@@ -15,7 +15,6 @@ datasource db {
 enum Role {
   CLIENT
   ADMIN
-  DELIVERY
 }
 
 model User {
@@ -31,7 +30,7 @@ model User {
 
   restaurants Restaurant[]
   orders      Order[]
-  deliveries  Delivery[]
+  reviews     Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -93,7 +92,8 @@ model Order {
   restaurant      Restaurant @relation(fields: [restaurantId], references: [id])
 
   items           OrderItem[]
-  delivery        Delivery?
+  payment         Payment?
+  review          Review?
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -111,24 +111,37 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id])
 }
 
-enum DeliveryStatus {
-  PENDING
-  PICKED_UP
-  DELIVERING
-  DELIVERED
-  CANCELLED
-}
+model Review {
+  id        Int    @id @default(autoincrement())
+  rating    Int
+  comment   String?
 
-model Delivery {
-  id        Int @id @default(autoincrement())
-  status    DeliveryStatus @default(PENDING)
+  orderId   Int    @unique
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  orderId   Int @unique
-  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  driverId  Int?
-  driver    User? @relation(fields: [driverId], references: [id])
+  userId    Int
+  user      User   @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id          Int           @id @default(autoincrement())
+  status      PaymentStatus @default(PENDING)
+  amount      Float
+  method      String?
+  externalId  String?
+
+  orderId     Int           @unique
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs"
-import NextAuth from "next-auth"
+import jwt from "jsonwebtoken"
 
 export async function POST(request: Request){
 
@@ -31,9 +31,13 @@ export async function POST(request: Request){
         }, {status: 400})
     }
     const { password: _, ...userWithoutPassword } = user
+    const token = jwt.sign({
+        id: user.id, email: user.email, role: user.role}, process.env.NEXTAUTH_SECRET!,
+    {expiresIn: "1d"})
     return NextResponse.json({
     success: true,
     message: "Login efetuado com sucesso",
+    token,
     data: userWithoutPassword
 }, { status: 200 })
 

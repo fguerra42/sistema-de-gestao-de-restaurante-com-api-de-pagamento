@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Socket</title>
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+</head>
+<body style="font-family: system-ui; padding: 20px;">
+    <h1>Socket.io Test</h1>
+    <div id="status">A conectar...</div>
+
+    <script>
+        const socket = io('http://localhost:3000')
+
+        socket.on("connect", () => {
+            console.log("Conectado! ID:", socket.id)
+            document.getElementById("status").innerText = "Conectado!"
+            socket.emit("join_order", 1)
+        })
+
+        socket.on("connect_error", (error) => {
+            console.error("Erro:", error.message)
+            document.getElementById("status").innerText = "Erro: " + error.message
+        })
+
+        socket.on("order_status", (data) => {
+            console.log("Status:", data)
+            document.getElementById("status").innerText = 
+                `Pedido #${data.orderId}: ${data.status}`
+        })
+    </script>
+</body>
+</html>
