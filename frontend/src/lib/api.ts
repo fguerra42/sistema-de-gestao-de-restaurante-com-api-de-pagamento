@@ -59,4 +59,7 @@ export const createPayment = (orderId: number) =>
 export const createReview = (orderId: number, data: { rating: number, comment?: string }) =>
     api.post(`/orders/${orderId}/review`, data)
 
+export const getPayments = () =>
+    api.get("/payments/list")
+
 export default api
