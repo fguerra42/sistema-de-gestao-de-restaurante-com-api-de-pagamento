@@ -32,29 +32,29 @@ export default function OrdersPage() {
     const [rating, setRating] = useState(5)
     const [comment, setComment] = useState("")
     const [reviewLoading, setReviewLoading] = useState(false)
+    const [userName, setUserName] = useState("")
 
     useEffect(() => {
-        // Verifica se está logado
         const token = localStorage.getItem("token")
         if (!token) {
             router.push("/login")
             return
         }
 
+        const user = JSON.parse(localStorage.getItem("user") || "{}")
+        setUserName(user.name || "")
+
         getOrders()
             .then((res) => {
                 const data = res.data.data
                 setOrders(data)
 
-                // Socket.io — entra nas rooms após carregar os pedidos
                 const socket = io("http://localhost:3000")
-
                 socket.on("connect", () => {
                     data.forEach((order: Order) => {
                         socket.emit("join_order", order.id)
                     })
                 })
-
                 socket.on("order_status", (event: { orderId: number, status: string }) => {
                     setOrders(prev => prev.map(order =>
                         order.id === event.orderId
@@ -98,10 +98,18 @@ export default function OrdersPage() {
 
     return (
         <div className="min-h-screen bg-gray-950 text-white">
-            <nav className="bg-gray-900 border-b border-gray-800 px-8 py-4 flex justify-between items-center">
+            {/* Topbar fixa */}
+            <nav className="sticky top-0 z-50 bg-gray-900 border-b border-gray-800 px-8 py-4 flex justify-between items-center">
                 <Link href="/" className="text-2xl font-bold text-orange-500">🍽 RestaurantApp</Link>
                 <div className="flex items-center gap-4">
-                    <span className="text-gray-300">Os meus pedidos</span>
+                    {userName && (
+                        <span className="text-gray-300 text-sm">
+                            Olá, <span className="text-orange-400 font-medium">{userName}</span>
+                        </span>
+                    )}
+                    <Link href="/" className="text-gray-400 hover:text-orange-500 transition text-sm">
+                        Restaurantes
+                    </Link>
                     <button
                         onClick={handleLogout}
                         className="text-gray-400 hover:text-red-400 transition text-sm"
@@ -117,9 +125,7 @@ export default function OrdersPage() {
                 {orders.length === 0 ? (
                     <div className="text-center text-gray-500 py-20">
                         <p className="mb-4">Ainda não tens pedidos</p>
-                        <Link href="/" className="text-orange-500 hover:underline">
-                            Ver restaurantes →
-                        </Link>
+                        <Link href="/" className="text-orange-500 hover:underline">Ver restaurantes →</Link>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -138,7 +144,6 @@ export default function OrdersPage() {
                                         <p className="text-orange-500 font-bold mt-2">${order.total.toFixed(2)}</p>
                                     </div>
                                 </div>
-
                                 <div className="border-t border-gray-800 pt-3 space-y-1">
                                     {order.items.map(item => (
                                         <p key={item.id} className="text-gray-400 text-sm">
@@ -146,7 +151,6 @@ export default function OrdersPage() {
                                         </p>
                                     ))}
                                 </div>
-
                                 {order.status === "COMPLETED" && (
                                     <button
                                         onClick={() => setReviewOrderId(order.id)}
@@ -161,50 +165,34 @@ export default function OrdersPage() {
                 )}
             </div>
 
-            {/* Modal de avaliação */}
             {reviewOrderId && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
                     <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 w-full max-w-md">
                         <h2 className="text-xl font-bold mb-4">Avaliar pedido #{reviewOrderId}</h2>
-
                         <div className="mb-4">
                             <label className="block text-sm text-gray-300 mb-2">Nota</label>
                             <div className="flex gap-2">
                                 {[1, 2, 3, 4, 5].map(star => (
-                                    <button
-                                        key={star}
-                                        onClick={() => setRating(star)}
-                                        className={`text-2xl ${rating >= star ? "text-orange-500" : "text-gray-600"}`}
-                                    >
+                                    <button key={star} onClick={() => setRating(star)}
+                                        className={`text-2xl ${rating >= star ? "text-orange-500" : "text-gray-600"}`}>
                                         ★
                                     </button>
                                 ))}
                             </div>
                         </div>
-
                         <div className="mb-6">
                             <label className="block text-sm text-gray-300 mb-1">Comentário</label>
-                            <textarea
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
+                            <textarea value={comment} onChange={(e) => setComment(e.target.value)}
                                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500"
-                                rows={3}
-                                placeholder="O que achou do pedido?"
-                            />
+                                rows={3} placeholder="O que achou do pedido?" />
                         </div>
-
                         <div className="flex gap-3">
-                            <button
-                                onClick={handleReview}
-                                disabled={reviewLoading}
-                                className="flex-1 bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition"
-                            >
+                            <button onClick={handleReview} disabled={reviewLoading}
+                                className="flex-1 bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition">
                                 {reviewLoading ? "A enviar..." : "Enviar avaliação"}
                             </button>
-                            <button
-                                onClick={() => setReviewOrderId(null)}
-                                className="flex-1 bg-gray-800 text-gray-300 py-2 rounded-lg hover:bg-gray-700 transition"
-                            >
+                            <button onClick={() => setReviewOrderId(null)}
+                                className="flex-1 bg-gray-800 text-gray-300 py-2 rounded-lg hover:bg-gray-700 transition">
                                 Cancelar
                             </button>
                         </div>

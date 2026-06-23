@@ -1,17 +1,21 @@
 import { NextResponse, NextRequest } from "next/server"
 import jwt from "jsonwebtoken"
+import { prisma } from "@/lib/prisma"
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
 
     const authHeader = request.headers.get("authorization");
+
     // Rotas públicas — deixa passar sem token
     if (request.method === "GET" && request.nextUrl.pathname.startsWith("/api/restaurants")) {
         return NextResponse.next()
     }
+
     // Webhook do Stripe — público
-if (request.nextUrl.pathname.startsWith("/api/payments/webhook")) {
-    return NextResponse.next()
-}
+    if (request.nextUrl.pathname.startsWith("/api/payments/webhook")) {
+        return NextResponse.next()
+    }
+
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return NextResponse.json(
             { success: false, message: "Token não fornecido" },
@@ -22,7 +26,20 @@ if (request.nextUrl.pathname.startsWith("/api/payments/webhook")) {
     const token = authHeader.replace("Bearer ", "")
 
     try {
-        const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!)
+        const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as { id: number, role: string }
+
+        // Verifica se o utilizador está bloqueado
+        const user = await prisma.user.findUnique({
+            where: { id: decoded.id },
+            select: { blocked: true }
+        })
+
+        if (user?.blocked) {
+            return NextResponse.json(
+                { success: false, message: "A tua conta foi bloqueada temporariamente. Contacta o suporte para mais informações." },
+                { status: 403 }
+            )
+        }
 
         const requestHeaders = new Headers(request.headers)
         requestHeaders.set("x-user", JSON.stringify(decoded))
@@ -40,5 +57,11 @@ if (request.nextUrl.pathname.startsWith("/api/payments/webhook")) {
 }
 
 export const config = {
-    matcher: ["/api/orders/:path*", "/api/restaurants/:path*",  "/api/payments/:path*"]
+    matcher: [
+        "/api/orders/:path*",
+        "/api/restaurants/:path*",
+        "/api/payments/:path*",
+        "/api/users/:path*",
+        "/api/upload",
+    ]
 }

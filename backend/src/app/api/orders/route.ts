@@ -65,7 +65,7 @@ export async function GET(request: Request) {
     const userHeader = request.headers.get("x-user")
     const user = JSON.parse(userHeader!)
 
-     const where = user.role === "ADMIN" ? {} : { userId: user.id }
+    const where = user.role === "ADMIN" ? {} : { userId: user.id }
     const orders = await prisma.order.findMany({
         where,
         include: { items: true, restaurant: true }

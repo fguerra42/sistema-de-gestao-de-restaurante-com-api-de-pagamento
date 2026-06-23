@@ -2,25 +2,25 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs"
 
-export async function POST(request: Request){
+export async function POST(request: Request) {
 
     const body = await request.json();
 
-    if (!body.name || !body.email || !body.password || !body.role){
+    if (!body.name || !body.email || !body.password || !body.role) {
         return NextResponse.json({
             success: false,
             message: "Campos obrigatorios"
-        }, {status: 400})
+        }, { status: 400 })
     }
-    
+
     const EmailExists = await prisma.user.findUnique({
-        where: {email: body.email} 
+        where: { email: body.email }
     })
-    if (EmailExists){
+    if (EmailExists) {
         return NextResponse.json({
             success: false,
             message: "Email já está em uso"
-        }, {status: 409})
+        }, { status: 409 })
     }
     const hashedPassword = await bcrypt.hash(body.password, 10);
     const newUser = await prisma.user.create({
@@ -28,13 +28,13 @@ export async function POST(request: Request){
             name: body.name,
             email: body.email,
             password: hashedPassword,
-            role: body.role    
+            role: body.role
         }
     })
-    const {password, ...userWithoutPassword} = newUser;
+    const { password, ...userWithoutPassword } = newUser;
     return NextResponse.json({
         success: true,
         message: "Usuário criado com sucesso",
         data: userWithoutPassword
-    }, {status: 201})
+    }, { status: 201 })
 }
