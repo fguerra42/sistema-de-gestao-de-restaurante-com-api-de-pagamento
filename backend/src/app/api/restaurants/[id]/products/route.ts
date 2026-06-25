@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma"
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const body = await request.json();
     const userHeader = request.headers.get("x-user")
@@ -32,7 +32,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     }, { status: 201 })
 }
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const restaurantId = parseInt(id);
     const products = await prisma.product.findMany({
@@ -44,7 +44,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     }, { status: 200 })
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
     const userHeader = request.headers.get("x-user")
     const user = JSON.parse(userHeader!)
 

@@ -1,8 +1,10 @@
 import axios from "axios"
 
-const API_URL = "http://localhost:3000/api"
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+const API_BASE = `${API_URL}/api`
 
 export function getToken() {
+    if (typeof window === "undefined") return null
     return localStorage.getItem("token")
 }
 
@@ -12,9 +14,10 @@ export function saveToken(token: string) {
 
 export function removeToken() {
     localStorage.removeItem("token")
+    localStorage.removeItem("user")
 }
 
-const api = axios.create({ baseURL: API_URL })
+const api = axios.create({ baseURL: API_BASE })
 
 api.interceptors.request.use((config) => {
     const token = getToken()
@@ -22,35 +25,37 @@ api.interceptors.request.use((config) => {
     return config
 })
 
-// AUTH
-export const register = (data: { name: string, email: string, password: string, role: string }) =>
+export const register = (data: { name: string; email: string; password: string; role: string }) =>
     api.post("/auth/register", data)
 
-export const login = (data: { email: string, password: string }) =>
+export const login = (data: { email: string; password: string }) =>
     api.post("/auth/login", data)
 
-// RESTAURANTES
 export const getRestaurants = () =>
     api.get("/restaurants")
 
-export const createRestaurant = (data: { name: string, address: string, image?: string }) =>
+export const createRestaurant = (data: { name: string; address: string; image?: string }) =>
     api.post("/restaurants", data)
+
+export const updateRestaurant = (id: number, data: { name?: string; address?: string; image?: string }) =>
+    api.patch(`/restaurants/${id}`, data)
 
 export const deleteRestaurant = (id: number) =>
     api.delete("/restaurants", { data: { id } })
 
-// PRODUTOS
 export const getProducts = (restaurantId: number) =>
     api.get(`/restaurants/${restaurantId}/products`)
 
-export const createProduct = (restaurantId: number, data: { name: string, description?: string, price: number, image?: string }) =>
+export const createProduct = (restaurantId: number, data: { name: string; description?: string; price: number; image?: string }) =>
     api.post(`/restaurants/${restaurantId}/products`, data)
+
+export const updateProduct = (restaurantId: number, productId: number, data: { name?: string; description?: string; price?: number; image?: string; available?: boolean }) =>
+    api.patch(`/restaurants/${restaurantId}/products/${productId}`, data)
 
 export const deleteProduct = (restaurantId: number, productId: number) =>
     api.delete(`/restaurants/${restaurantId}/products`, { data: { productId } })
 
-// PEDIDOS
-export const createOrder = (data: { restaurantId: number, deliveryAddress: string, items: { productId: number, quantity: number }[] }) =>
+export const createOrder = (data: { restaurantId: number; deliveryAddress: string; items: { productId: number; quantity: number }[] }) =>
     api.post("/orders", data)
 
 export const getOrders = () =>
@@ -59,18 +64,18 @@ export const getOrders = () =>
 export const updateOrderStatus = (orderId: number, status: string) =>
     api.patch(`/orders/${orderId}/status`, { status })
 
-// PAGAMENTOS
+export const cancelOrder = (orderId: number) =>
+    api.patch(`/orders/${orderId}/cancel`)
+
 export const createPayment = (orderId: number) =>
     api.post("/payments", { orderId })
 
 export const getPayments = () =>
     api.get("/payments/list")
 
-// AVALIAÇÕES
-export const createReview = (orderId: number, data: { rating: number, comment?: string }) =>
+export const createReview = (orderId: number, data: { rating: number; comment?: string }) =>
     api.post(`/orders/${orderId}/review`, data)
 
-// UTILIZADORES
 export const getUsers = () =>
     api.get("/users")
 
@@ -80,7 +85,6 @@ export const toggleBlockUser = (userId: number, blocked: boolean) =>
 export const deleteUser = (userId: number) =>
     api.delete(`/users/${userId}`)
 
-// UPLOAD
 export const uploadImage = async (file: File): Promise<string> => {
     const formData = new FormData()
     formData.append("file", file)

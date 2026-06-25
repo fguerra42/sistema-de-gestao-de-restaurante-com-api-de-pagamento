@@ -7,6 +7,9 @@ const dev: boolean = process.env.NODE_ENV !== "production"
 const app = next({ dev })
 const handler = app.getRequestHandler()
 
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3001"
+const PORT = parseInt(process.env.PORT || "3000", 10)
+
 interface ClientToServerEvents {
     join_order: (orderId: number | string) => void
 }
@@ -20,7 +23,7 @@ interface SocketData {}
 
 app.prepare().then(() => {
     const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
-        res.setHeader("Access-Control-Allow-Origin", "http://localhost:3001")
+        res.setHeader("Access-Control-Allow-Origin", FRONTEND_URL)
         res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
         res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
@@ -35,7 +38,7 @@ app.prepare().then(() => {
 
     const io = new Server(httpServer, {
         cors: {
-            origin: "http://localhost:3001",
+            origin: FRONTEND_URL,
             methods: ["GET", "POST"]
         }
     })
@@ -56,7 +59,6 @@ app.prepare().then(() => {
 
     setIO(io)
 
-    const PORT = 3000
     httpServer.listen(PORT, () => {
         console.log(`> Servidor Next.js + Socket.IO pronto em http://localhost:${PORT}`)
     })

@@ -26,7 +26,7 @@ export async function proxy(request: NextRequest) {
     const token = authHeader.replace("Bearer ", "")
 
     try {
-        const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as { id: number, role: string }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number, role: string }
 
         // Verifica se o utilizador está bloqueado
         const user = await prisma.user.findUnique({

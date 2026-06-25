@@ -9,6 +9,7 @@ export async function POST(request: Request) {
     if (user.role !== "CLIENT") {
         return NextResponse.json({ message: "Sem permissão" }, { status: 403 })
     }
+
     const { restaurantId, deliveryAddress, items } = body
 
     if (!restaurantId || !deliveryAddress || !items || items.length === 0) {
@@ -16,6 +17,17 @@ export async function POST(request: Request) {
             success: false,
             message: "Campos obrigatorios"
         }, { status: 400 })
+    }
+
+    const restaurant = await prisma.restaurant.findUnique({
+        where: { id: restaurantId }
+    })
+
+    if (!restaurant) {
+        return NextResponse.json({
+            success: false,
+            message: "Restaurante não encontrado"
+        }, { status: 404 })
     }
 
     const productsFound: any[] = []
@@ -31,6 +43,27 @@ export async function POST(request: Request) {
                 success: false,
                 message: `Produto ${item.productId} não encontrado`
             }, { status: 404 })
+        }
+
+        if (product.restaurantId !== restaurantId) {
+            return NextResponse.json({
+                success: false,
+                message: `Produto "${product.name}" não pertence a este restaurante`
+            }, { status: 400 })
+        }
+
+        if (!product.available) {
+            return NextResponse.json({
+                success: false,
+                message: `Produto "${product.name}" não está disponível`
+            }, { status: 400 })
+        }
+
+        if (item.quantity < 1) {
+            return NextResponse.json({
+                success: false,
+                message: "Quantidade inválida para o produto " + product.name
+            }, { status: 400 })
         }
 
         productsFound.push(product)
@@ -51,7 +84,15 @@ export async function POST(request: Request) {
                 }))
             }
         },
-        include: { items: true }
+        include: {
+            items: {
+                include: {
+                    product: {
+                        select: { id: true, name: true, image: true }
+                    }
+                }
+            }
+        }
     })
 
     return NextResponse.json({
@@ -68,8 +109,20 @@ export async function GET(request: Request) {
     const where = user.role === "ADMIN" ? {} : { userId: user.id }
     const orders = await prisma.order.findMany({
         where,
-        include: { items: true, restaurant: true }
+        include: {
+            items: {
+                include: {
+                    product: {
+                        select: { id: true, name: true, image: true }
+                    }
+                }
+            },
+            restaurant: true,
+            review: {
+                select: { id: true, rating: true, comment: true }
+            }
+        },
+        orderBy: { createdAt: "desc" }
     })
     return NextResponse.json({ success: true, data: orders }, { status: 200 })
-
 }

@@ -32,6 +32,11 @@ export interface OrderItem {
     quantity: number
     price: number
     productId: number
+    product?: {
+        id: number
+        name: string
+        image?: string | null
+    }
 }
 
 export interface Order {
@@ -43,6 +48,11 @@ export interface Order {
     restaurantId: number
     items: OrderItem[]
     restaurant?: Restaurant
+    review?: {
+        id: number
+        rating: number
+        comment?: string | null
+    } | null
 }
 
 export interface Review {

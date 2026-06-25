@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { OrderStatus } from "@/generated/prisma";
 
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const orderId = parseInt(id)
     const body = await request.json()

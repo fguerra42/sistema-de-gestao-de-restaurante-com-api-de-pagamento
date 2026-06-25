@@ -3,9 +3,11 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { register } from "@/lib/api"
 import Link from "next/link"
+import { useToast } from "@/lib/ToastContext"
 
 export default function RegisterPage() {
     const router = useRouter()
+    const { toast } = useToast()
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -19,63 +21,69 @@ export default function RegisterPage() {
 
         try {
             await register({ name, email, password, role: "CLIENT" })
+            toast("Conta criada com sucesso!", "success")
             router.push("/login")
         } catch (err: any) {
-            setError(err.response?.data?.message || "Erro ao registar")
+            const msg = err.response?.data?.message || "Erro ao registar"
+            setError(msg)
+            toast(msg, "error")
         } finally {
             setLoading(false)
         }
     }
 
     return (
-        <div className="min-h-screen bg-gray-950 text-white flex flex-col">
-            <nav className="bg-gray-900 border-b border-gray-800 px-8 py-4 flex justify-between items-center">
-                <Link href="/" className="text-2xl font-bold text-orange-500">🍽 RestaurantApp</Link>
+        <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col">
+            <nav className="bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-[#1f1f2a] px-6 py-4 flex justify-between items-center">
+                <Link href="/" className="text-xl font-bold text-orange-500">Parcelar</Link>
             </nav>
 
-            <div className="flex-1 flex items-center justify-center px-4">
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 w-full max-w-md">
-                    <h1 className="text-2xl font-bold mb-2">Criar conta</h1>
-                    <p className="text-gray-400 mb-6">Regista-te para fazer pedidos</p>
+            <div className="flex-1 flex items-center justify-center px-4 py-12">
+                <div className="bg-[#13131a] border border-[#1f1f2a] rounded-2xl p-8 w-full max-w-md animate-fade-in">
+                    <div className="text-center mb-8">
+                        <h1 className="text-2xl font-bold">Criar conta</h1>
+                        <p className="text-gray-500 mt-1">Regista-te para fazer pedidos online</p>
+                    </div>
 
                     {error && (
-                        <div className="bg-red-900 border border-red-700 text-red-300 p-3 rounded-lg mb-4">
-                            {error}
+                        <div className="bg-red-900/30 border border-red-800/50 text-red-300 p-3 rounded-xl mb-6 text-sm flex items-center gap-2">
+                            <span>✕</span>
+                            <span>{error}</span>
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Nome</label>
+                            <label className="block text-sm font-medium text-gray-400 mb-1.5">Nome</label>
                             <input
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500"
+                                className="w-full bg-[#1a1a24] border border-[#2a2a35] rounded-xl px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500 transition text-sm"
                                 placeholder="O teu nome"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                            <label className="block text-sm font-medium text-gray-400 mb-1.5">Email</label>
                             <input
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500"
+                                className="w-full bg-[#1a1a24] border border-[#2a2a35] rounded-xl px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500 transition text-sm"
                                 placeholder="email@exemplo.com"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
+                            <label className="block text-sm font-medium text-gray-400 mb-1.5">Password</label>
                             <input
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500"
+                                className="w-full bg-[#1a1a24] border border-[#2a2a35] rounded-xl px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500 transition text-sm"
                                 placeholder="••••••••"
                                 required
                             />
@@ -84,15 +92,20 @@ export default function RegisterPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition font-medium"
+                            className="w-full bg-orange-500 text-white py-2.5 rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium text-sm"
                         >
-                            {loading ? "A registar..." : "Criar conta"}
+                            {loading ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full" style={{ animation: "spin-slow 0.8s linear infinite" }} />
+                                    A registar...
+                                </span>
+                            ) : "Criar conta"}
                         </button>
                     </form>
 
-                    <p className="text-center mt-4 text-sm text-gray-400">
+                    <p className="text-center mt-6 text-sm text-gray-600">
                         Já tens conta?{" "}
-                        <Link href="/login" className="text-orange-500 hover:underline">
+                        <Link href="/login" className="text-orange-500 hover:text-orange-400 transition font-medium">
                             Entrar
                         </Link>
                     </p>

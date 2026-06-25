@@ -1,11 +1,20 @@
 "use client"
 import { useEffect, useState } from "react"
-import { getRestaurants } from "@/lib/api"
+import { getRestaurants, API_URL } from "@/lib/api"
 import { Restaurant } from "@/types"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
-const API_URL = "http://localhost:3000"
+function SkeletonCard() {
+    return (
+        <div className="bg-[#13131a] border border-[#1f1f2a] rounded-xl p-5 animate-pulse-skeleton">
+            <div className="w-full h-40 bg-gray-800 rounded-lg mb-4" />
+            <div className="h-5 bg-gray-800 rounded w-3/4 mb-2" />
+            <div className="h-4 bg-gray-800 rounded w-1/2 mb-4" />
+            <div className="h-4 bg-gray-800 rounded w-1/3" />
+        </div>
+    )
+}
 
 function RestaurantImage({ image, name }: { image?: string | null; name: string }) {
     const [error, setError] = useState(false)
@@ -13,15 +22,15 @@ function RestaurantImage({ image, name }: { image?: string | null; name: string 
 
     if (!src || error) {
         return (
-            <div className="w-full h-40 bg-gray-800 rounded-lg flex items-center justify-center text-4xl mb-4">
-                🍴
+            <div className="w-full h-44 bg-gradient-to-br from-orange-900/30 to-gray-800 rounded-xl flex items-center justify-center text-5xl mb-4">
+                <span className="opacity-60">🍽</span>
             </div>
         )
     }
 
     return (
         <img src={src} alt={name} onError={() => setError(true)}
-            className="w-full h-40 object-cover rounded-lg mb-4" />
+            className="w-full h-44 object-cover rounded-xl mb-4 transition-transform duration-500 group-hover:scale-105" />
     )
 }
 
@@ -55,32 +64,33 @@ export default function HomePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-950 text-white">
-            {/* Topbar fixa */}
-            <nav className="sticky top-0 z-50 bg-gray-900 border-b border-gray-800 px-8 py-4 flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-orange-500">🍽 RestaurantApp</h1>
+        <div className="min-h-screen bg-[#0a0a0f] text-white">
+            <nav className="sticky top-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-[#1f1f2a] px-6 py-4 flex justify-between items-center">
+                <Link href="/" className="text-xl font-bold">
+                    <span className="text-orange-500">Parcelar</span>
+                </Link>
                 <div className="flex items-center gap-4">
                     {isLoggedIn ? (
                         <>
-                            <span className="text-gray-300 text-sm">
+                            <span className="text-gray-400 text-sm hidden sm:block">
                                 Olá, <span className="text-orange-400 font-medium">{userName}</span>
                             </span>
-                            <Link href="/orders" className="text-gray-400 hover:text-orange-500 transition text-sm">
-                                Os meus pedidos
+                            <Link href="/orders" className="text-gray-400 hover:text-orange-400 transition text-sm">
+                                Pedidos
                             </Link>
                             <button onClick={handleLogout}
-                                className="text-gray-400 hover:text-red-400 transition text-sm">
+                                className="text-gray-500 hover:text-red-400 transition text-sm">
                                 Sair
                             </button>
                         </>
                     ) : (
                         <>
                             <Link href="/login"
-                                className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:border-orange-500 hover:text-orange-500 transition">
+                                className="px-4 py-2 rounded-lg border border-gray-700 text-gray-300 hover:border-orange-500 hover:text-orange-400 transition text-sm">
                                 Entrar
                             </Link>
                             <Link href="/register"
-                                className="px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition">
+                                className="px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition text-sm font-medium">
                                 Criar conta
                             </Link>
                         </>
@@ -88,33 +98,48 @@ export default function HomePage() {
                 </div>
             </nav>
 
-            <div className="text-center py-16 px-8">
-                <h2 className="text-5xl font-bold mb-4">Pede o teu prato favorito</h2>
-                <p className="text-gray-400 text-lg">Escolhe um restaurante e faz o teu pedido online</p>
+            <div className="text-center py-20 px-6 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent pointer-events-none" />
+                <h2 className="text-4xl sm:text-6xl font-bold mb-4 tracking-tight">
+                    Pede o teu <span className="text-orange-500">prato favorito</span>
+                </h2>
+                <p className="text-gray-500 text-lg max-w-xl mx-auto">
+                    Escolhe um restaurante, vê o cardápio e faz o teu pedido online
+                </p>
             </div>
 
-            <div className="max-w-5xl mx-auto px-8 pb-16">
-                <h3 className="text-xl font-semibold mb-6 text-gray-300">Restaurantes disponíveis</h3>
+            <div className="max-w-6xl mx-auto px-6 pb-20">
+                <div className="flex items-center justify-between mb-8">
+                    <h3 className="text-lg font-medium text-gray-300">Restaurantes disponíveis</h3>
+                    <span className="text-sm text-gray-600">
+                        {!loading && `${restaurants.length} restaurante${restaurants.length !== 1 ? "s" : ""}`}
+                    </span>
+                </div>
 
                 {loading ? (
-                    <div className="text-center text-gray-500 py-20">A carregar...</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
+                    </div>
                 ) : restaurants.length === 0 ? (
-                    <div className="text-center text-gray-500 py-20">Nenhum restaurante disponível</div>
+                    <div className="text-center text-gray-600 py-24">
+                        <span className="text-5xl block mb-4">🍽</span>
+                        <p className="text-lg">Nenhum restaurante disponível</p>
+                        <p className="text-sm mt-2 text-gray-700">Volta mais tarde para novidades</p>
+                    </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {restaurants.map((restaurant) => (
-                            <div key={restaurant.id}
-                                className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-orange-500 transition group">
+                            <Link key={restaurant.id} href={`/restaurants/${restaurant.id}`}
+                                className="group bg-[#13131a] border border-[#1f1f2a] rounded-xl p-5 hover:border-orange-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/5">
                                 <RestaurantImage image={restaurant.image} name={restaurant.name} />
-                                <h4 className="text-lg font-semibold mb-1 group-hover:text-orange-500 transition">
+                                <h4 className="text-lg font-semibold mb-1 group-hover:text-orange-400 transition-colors">
                                     {restaurant.name}
                                 </h4>
-                                <p className="text-gray-500 text-sm mb-4">{restaurant.address}</p>
-                                <Link href={`/restaurants/${restaurant.id}`}
-                                    className="text-orange-500 text-sm font-medium hover:underline">
-                                    Ver cardápio →
-                                </Link>
-                            </div>
+                                <p className="text-gray-600 text-sm mb-4">{restaurant.address}</p>
+                                <span className="text-orange-500 text-sm font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                                    Ver cardápio <span className="text-lg leading-none">→</span>
+                                </span>
+                            </Link>
                         ))}
                     </div>
                 )}

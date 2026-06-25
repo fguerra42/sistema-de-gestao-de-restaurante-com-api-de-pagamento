@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     const { password: _, ...userWithoutPassword } = user
     const token = jwt.sign({
         id: user.id, email: user.email, role: user.role
-    }, process.env.NEXTAUTH_SECRET!,
+    }, process.env.JWT_SECRET!,
         { expiresIn: "1d" })
     return NextResponse.json({
         success: true,
