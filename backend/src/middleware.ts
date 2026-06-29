@@ -2,19 +2,19 @@ import { NextResponse, NextRequest } from "next/server"
 import jwt from "jsonwebtoken"
 import { prisma } from "@/lib/prisma"
 
-export async function proxy(request: NextRequest) {
+export const runtime = "nodejs"
 
-    const authHeader = request.headers.get("authorization");
-
-    // Rotas públicas — deixa passar sem token
+export async function middleware(request: NextRequest) {
+    // Rotas públicas
     if (request.method === "GET" && request.nextUrl.pathname.startsWith("/api/restaurants")) {
         return NextResponse.next()
     }
 
-    // Webhook do Stripe — público
     if (request.nextUrl.pathname.startsWith("/api/payments/webhook")) {
         return NextResponse.next()
     }
+
+    const authHeader = request.headers.get("authorization")
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return NextResponse.json(
@@ -26,9 +26,8 @@ export async function proxy(request: NextRequest) {
     const token = authHeader.replace("Bearer ", "")
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number, role: string }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; role: string }
 
-        // Verifica se o utilizador está bloqueado
         const user = await prisma.user.findUnique({
             where: { id: decoded.id },
             select: { blocked: true }
