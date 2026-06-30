@@ -23,7 +23,7 @@ COPY src ./src
 COPY server.ts ./
 
 RUN chmod -R +x node_modules/.bin
-RUN npm run build
+RUN npm run build -- --webpack
 
 # ==========================================
 # ETAPA DE PRODUÇÃO (RUNNER)

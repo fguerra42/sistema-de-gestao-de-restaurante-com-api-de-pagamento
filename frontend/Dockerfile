@@ -8,7 +8,7 @@ COPY tsconfig.json next.config.ts postcss.config.mjs eslint.config.mjs ./
 COPY src ./src
 COPY public ./public
 
-RUN npm run build
+RUN npm run build -- --webpack
 
 FROM node:20-alpine AS runner
 WORKDIR /app
