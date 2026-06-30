@@ -22,6 +22,7 @@ COPY next.config.ts ./
 COPY src ./src
 COPY server.ts ./
 
+RUN chmod -R +x node_modules/.bin
 RUN npm run build
 
 # ==========================================
