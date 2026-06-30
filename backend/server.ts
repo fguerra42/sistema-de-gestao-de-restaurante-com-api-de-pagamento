@@ -8,7 +8,7 @@ const app = next({ dev })
 const handler = app.getRequestHandler()
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3001"
-const PORT = parseInt(process.env.PORT || "3000", 10)
+const PORT = parseInt(process.env.PORT || "3006", 10)
 
 interface ClientToServerEvents {
     join_order: (orderId: number | string) => void

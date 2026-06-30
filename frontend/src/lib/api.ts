@@ -1,6 +1,6 @@
 import axios from "axios"
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3006"
 const API_BASE = `${API_URL}/api`
 
 export function getToken() {

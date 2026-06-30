@@ -22,8 +22,8 @@ COPY --from=builder /app/.next/static ./.next/static
 
 USER nextjs
 
-EXPOSE 3001
+EXPOSE 3007
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=3007
 
 CMD ["node", "server.js"]
