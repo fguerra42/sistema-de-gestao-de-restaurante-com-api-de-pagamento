@@ -1,16 +1,29 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs"
+import { success } from "zod";
 
 export async function POST(request: Request) {
 
     const body = await request.json();
+    const senhaForte = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#_-])[A-Za-z\d@$!%*?&.#_-]{8,}$/;
+
 
     if (!body.name || !body.email || !body.password || !body.role) {
         return NextResponse.json({
             success: false,
             message: "Campos obrigatorios"
         }, { status: 400 })
+    }
+    if (!senhaForte.test(body.password)) {
+        return NextResponse.json(
+            {
+                success: false,
+                message:
+                    "A senha deve ter no mínimo 8 caracteres, incluindo letra maiúscula, minúscula, número e caractere especial.",
+            },
+            { status: 400 }
+        );
     }
 
     const EmailExists = await prisma.user.findUnique({
