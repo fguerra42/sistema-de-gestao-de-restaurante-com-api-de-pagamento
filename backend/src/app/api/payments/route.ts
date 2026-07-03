@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { stripe } from "@/lib/stripe"
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3001"
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://10.0.0.10:3001"
 
 export async function POST(request: Request) {
     const body = await request.json()

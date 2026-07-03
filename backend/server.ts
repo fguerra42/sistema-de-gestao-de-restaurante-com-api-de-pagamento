@@ -7,7 +7,7 @@ const dev: boolean = process.env.NODE_ENV !== "production"
 const app = next({ dev })
 const handler = app.getRequestHandler()
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3007"
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://10.0.0.10:3007"
 const PORT = parseInt(process.env.PORT || "3006", 10)
 
 interface ClientToServerEvents {
@@ -60,6 +60,6 @@ app.prepare().then(() => {
     setIO(io)
 
     httpServer.listen(PORT, () => {
-        console.log(`> Servidor Next.js + Socket.IO pronto em http://localhost:${PORT}`)
+        console.log(`> Servidor Next.js + Socket.IO pronto em http://10.0.0.10:${PORT}`)
     })
 })
