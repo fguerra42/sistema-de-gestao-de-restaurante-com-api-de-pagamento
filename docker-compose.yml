@@ -31,6 +31,10 @@ services:
       - DATABASE_URL=postgresql://postgres:Fi123456%40@postgres:5432/restaurant?schema=public
       - FRONTEND_URL=http://10.0.0.10:3007
       - NEXT_PUBLIC_API_URL=http://10.0.0.10:3006
+      - JWT_SECRET=${JWT_SECRET}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+
     depends_on:
       postgres:
         condition: service_healthy
