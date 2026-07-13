@@ -1,6 +1,5 @@
 import { NextResponse, NextRequest } from "next/server"
 import jwt from "jsonwebtoken"
-import { prisma } from "@/lib/prisma"
 
 export const runtime = "nodejs"
 
@@ -27,18 +26,6 @@ export async function middleware(request: NextRequest) {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; role: string }
-
-        const user = await prisma.user.findUnique({
-            where: { id: decoded.id },
-            select: { blocked: true }
-        })
-
-        if (user?.blocked) {
-            return NextResponse.json(
-                { success: false, message: "A tua conta foi bloqueada temporariamente. Contacta o suporte para mais informações." },
-                { status: 403 }
-            )
-        }
 
         const requestHeaders = new Headers(request.headers)
         requestHeaders.set("x-user", JSON.stringify(decoded))

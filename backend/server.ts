@@ -7,25 +7,18 @@ const dev: boolean = process.env.NODE_ENV !== "production"
 const app = next({ dev })
 const handler = app.getRequestHandler()
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://10.0.0.10:3007"
-const PORT = parseInt(process.env.PORT || "3006", 10)
-
-interface ClientToServerEvents {
-    join_order: (orderId: number | string) => void
-}
-
-interface ServerToClientEvents {
-    order_status: (data: { orderId: number | string; status: string }) => void
-}
-
-interface InterServerEvents {}
-interface SocketData {}
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3007"
+const ALLOWED_ORIGINS = [FRONTEND_URL, "http://localhost:3007", "http://10.0.0.10:3007"]
 
 app.prepare().then(() => {
     const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
-        res.setHeader("Access-Control-Allow-Origin", FRONTEND_URL)
+        const origin = req.headers.origin || ""
+        if (ALLOWED_ORIGINS.includes(origin)) {
+            res.setHeader("Access-Control-Allow-Origin", origin)
+        }
         res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
         res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        res.setHeader("Access-Control-Allow-Credentials", "true")
 
         if (req.method === "OPTIONS") {
             res.writeHead(200)
@@ -38,8 +31,9 @@ app.prepare().then(() => {
 
     const io = new Server(httpServer, {
         cors: {
-            origin: FRONTEND_URL,
-            methods: ["GET", "POST"]
+            origin: ALLOWED_ORIGINS,
+            methods: ["GET", "POST"],
+            credentials: true
         }
     })
 
@@ -59,7 +53,8 @@ app.prepare().then(() => {
 
     setIO(io)
 
-    httpServer.listen(PORT, () => {
-        console.log(`> Servidor Next.js + Socket.IO pronto em http://10.0.0.10:${PORT}`)
-    })
+httpServer.listen(PORT, () => {
+    console.log(`> Servidor Next.js + Socket.IO pronto em http://localhost:${PORT}`)
+    console.log(`> Origens permitidas: ${ALLOWED_ORIGINS.join(", ")}`)
+})
 })
