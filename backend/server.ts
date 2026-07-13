@@ -3,6 +3,23 @@ import { Server, Socket } from "socket.io"
 import next from "next"
 import { setIO } from "./src/lib/socket"
 
+// --- DEFINIÇÃO DOS TIPOS DO SOCKET.IO ---
+// Aqui você diz ao TypeScript quais eventos o cliente pode enviar
+interface ClientToServerEvents {
+  join_order: (orderId: string | number) => void;
+}
+
+// Aqui você define os eventos que o servidor envia para o cliente (adicione se precisar)
+interface ServerToClientEvents {
+  order_updated: (data: any) => void;
+}
+
+// Tipos adicionais exigidos pela assinatura do Socket do Socket.IO
+interface InterServerEvents {}
+interface SocketData {}
+// ----------------------------------------
+
+const PORT = process.env.PORT || 3007
 const dev: boolean = process.env.NODE_ENV !== "production"
 const app = next({ dev })
 const handler = app.getRequestHandler()
@@ -29,7 +46,8 @@ app.prepare().then(() => {
         handler(req, res)
     })
 
-    const io = new Server(httpServer, {
+    // Passamos os tipos criados aqui para o servidor também ficar tipado corretamente
+    const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(httpServer, {
         cors: {
             origin: ALLOWED_ORIGINS,
             methods: ["GET", "POST"],
@@ -40,6 +58,7 @@ app.prepare().then(() => {
     io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
         console.log(`Cliente conectado: ${socket.id}`)
 
+        // Agora o TypeScript sabe exatamente o que é "join_order" e que ele recebe um orderId
         socket.on("join_order", (orderId) => {
             const roomName = `order_${orderId}`
             socket.join(roomName)
@@ -53,8 +72,8 @@ app.prepare().then(() => {
 
     setIO(io)
 
-httpServer.listen(PORT, () => {
-    console.log(`> Servidor Next.js + Socket.IO pronto em http://localhost:${PORT}`)
-    console.log(`> Origens permitidas: ${ALLOWED_ORIGINS.join(", ")}`)
-})
+    httpServer.listen(PORT, () => {
+        console.log(`> Servidor Next.js + Socket.IO pronto em http://localhost:${PORT}`)
+        console.log(`> Origens permitidas: ${ALLOWED_ORIGINS.join(", ")}`)
+    })
 })
